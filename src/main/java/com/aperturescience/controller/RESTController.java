@@ -1,10 +1,10 @@
 package com.aperturescience.controller;
 
 import com.aperturescience.model.response.FaceData;
-import com.aperturescience.service.CamService;
-import com.aperturescience.service.FaceAPIService;
-import com.aperturescience.service.ImageshackAPIService;
-import com.aperturescience.service.ObjectDetectionAPIService;
+import com.aperturescience.service.camera.CamService;
+import com.aperturescience.service.apis.FaceAPIService;
+import com.aperturescience.service.apis.ImageshackAPIService;
+import com.aperturescience.service.apis.ObjectDetectionAPIService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

@@ -1,8 +1,8 @@
-package com.aperturescience.service;
+package com.aperturescience.service.apis;
 
 import com.aperturescience.model.response.DetectedObjects;
-import com.aperturescience.model.response.FaceData;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -14,26 +14,29 @@ import org.springframework.web.client.RestTemplate;
 import java.nio.charset.Charset;
 
 @Service
-public class FaceAPIServiceImpl implements FaceAPIService {
-    private final String apiKey = "c999bb06b2f047aca34ceca80f1ad81a";
-    private final String url = "https://westcentralus.api.cognitive.microsoft.com/face/v1.0/";
+public class ObjectDetectionAPIServiceImpl implements ObjectDetectionAPIService {
+
+    @Value("${api.objectdetection.key}")
+    private String apiKey;
+    //    private final String region = "westcentralus";
+    @Value("${api.objectdetection.url}")
+    private String url;
 
     @Autowired
     private RestTemplate restTemplate;
 
     @Override
-    public FaceData analyze(String picUrl) {
-        String path = "detect";
+    public String analyze(String picUrl) {
+        String path = "describe";
 
-        restTemplate.getMessageConverters()
-                .add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
+        restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("Ocp-Apim-Subscription-Key",apiKey);
         String body = "{\"url\":\""+picUrl+"\"}";
         HttpEntity<String> request = new HttpEntity<>(body, headers);
-        ResponseEntity<FaceData[]> response = restTemplate.postForEntity(url + path, request, FaceData[].class);
-        return response.getBody()[0];
+        ResponseEntity<DetectedObjects> response = restTemplate.postForEntity(url + path, request, DetectedObjects.class);
+        return response.getBody().toString();
     }
 }

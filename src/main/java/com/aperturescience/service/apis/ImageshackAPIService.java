@@ -1,4 +1,4 @@
-package com.aperturescience.service;
+package com.aperturescience.service.apis;
 
 import com.aperturescience.model.Image;
 

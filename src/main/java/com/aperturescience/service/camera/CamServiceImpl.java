@@ -1,7 +1,6 @@
-package com.aperturescience.service;
+package com.aperturescience.service.camera;
 
 import com.aperturescience.model.Image;
-import com.aperturescience.service.camera.Cam;
 import org.springframework.stereotype.Service;
 
 @Service

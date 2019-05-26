@@ -36,6 +36,19 @@
             <version>0.3.12</version>
         </dependency>
 
+        <!--WebSockets-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
+        <!--Serial-->
+        <dependency>
+            <groupId>org.rxtx</groupId>
+            <artifactId>rxtx</artifactId>
+            <version>2.1.7</version>
+        </dependency>
+
     </dependencies>
     <packaging>jar</packaging>
 
