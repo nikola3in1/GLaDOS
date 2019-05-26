@@ -16,6 +16,7 @@
 
     <properties>
         <java.version>1.8</java.version>
+        <start-class>com.aperturescience.glados.GLaDosApplication</start-class>
     </properties>
 
     <dependencies>
@@ -44,15 +45,17 @@
 
         <!--Serial-->
         <dependency>
-            <groupId>org.rxtx</groupId>
-            <artifactId>rxtx</artifactId>
-            <version>2.1.7</version>
+            <groupId>com.fazecast</groupId>
+            <artifactId>jSerialComm</artifactId>
+            <version>[2.0.0,3.0.0)</version>
         </dependency>
 
     </dependencies>
     <packaging>jar</packaging>
 
+
     <build>
+        <!--build with: mvn clean package assembly:single-->
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -71,7 +74,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.2-beta-5</version>
+                <version>3.1.1</version>
                 <configuration>
                     <archive>
                         <manifest>

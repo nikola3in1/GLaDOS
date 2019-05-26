@@ -5,6 +5,7 @@ import com.aperturescience.service.camera.CamService;
 import com.aperturescience.service.apis.FaceAPIService;
 import com.aperturescience.service.apis.ImageshackAPIService;
 import com.aperturescience.service.apis.ObjectDetectionAPIService;
+import com.fazecast.jSerialComm.SerialPort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -51,7 +52,6 @@ public class RESTController {
         return "done";
     }
 
-
     private void drawRect(String imageUrl, FaceData faceData) {
         BufferedImage img = null;
         try {
@@ -70,6 +70,26 @@ public class RESTController {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @GetMapping("/serial")
+    public void serialTest(){
+        SerialPort comPort = SerialPort.getCommPorts()[0];
+        comPort.openPort();
+        comPort.setBaudRate(57600);
+        try {
+            while (true)
+            {
+                while (comPort.bytesAvailable() == 0)
+                    Thread.sleep(20);
+
+                byte[] readBuffer = new byte[comPort.bytesAvailable()];
+                int numRead = comPort.readBytes(readBuffer, readBuffer.length);
+                String s = new String(readBuffer);
+                System.out.println("Read " + s);
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        comPort.closePort();
     }
 
     private String test() {
