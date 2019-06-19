@@ -5,9 +5,10 @@ import com.aperturescience.service.camera.CamService;
 import com.aperturescience.service.apis.FaceAPIService;
 import com.aperturescience.service.apis.ImageshackAPIService;
 import com.aperturescience.service.apis.ObjectDetectionAPIService;
+import com.aperturescience.service.serial.SerialService;
 import com.fazecast.jSerialComm.SerialPort;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,23 +18,29 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 
 /*This class is purely used for testing purposes*/
 @RestController
-@RequestMapping("/rest/api/**")
+@RequestMapping("/api/**")
 public class RESTController {
 
-    @Autowired
-    private ImageshackAPIService imgApiService;
+    // Dependencies
+    private final ImageshackAPIService imgApiService;
+    private final CamService camService;
+    private final ObjectDetectionAPIService objectDetectionAPIService;
+    private final FaceAPIService faceAPIService;
+    private final SerialService serialService;
 
-    @Autowired
-    private CamService camService;
-
-    @Autowired
-    private ObjectDetectionAPIService objectDetectionAPIService;
-
-    @Autowired
-    private FaceAPIService faceAPIService;
+    public RESTController(ImageshackAPIService imgApiService, CamService camService,
+                          ObjectDetectionAPIService objectDetectionAPIService, FaceAPIService faceAPIService,
+                          SerialService serialService) {
+        this.imgApiService = imgApiService;
+        this.serialService = serialService;
+        this.camService = camService;
+        this.objectDetectionAPIService = objectDetectionAPIService;
+        this.faceAPIService = faceAPIService;
+    }
 
     @GetMapping("/login")
     public String login() {
@@ -72,9 +79,30 @@ public class RESTController {
         }
     }
 
+
+    @GetMapping("/serialRead")
+    public void serialRead(){
+        System.out.println("Reading msg from serial");
+        serialService.readMsg();
+        System.out.println("Message's read");
+    }
+
+
+    @GetMapping("/serial/write/{motor}/{value}")
+    public void serialWrite(@PathVariable String motor, @PathVariable Integer value){
+        System.out.println("Sending: "+motor+", "+value);
+        System.out.println("Reading msg from serial");
+
+
+        serialService.readMsg();
+        serialService.sendMsg(motor, value);
+        System.out.println("Message's read");
+    }
+
     @GetMapping("/serial")
     public void serialTest(){
         SerialPort comPort = SerialPort.getCommPorts()[0];
+        System.out.println("PORTS: "+Arrays.toString(SerialPort.getCommPorts()));
         comPort.openPort();
         comPort.setBaudRate(57600);
         try {
@@ -85,8 +113,7 @@ public class RESTController {
 
                 byte[] readBuffer = new byte[comPort.bytesAvailable()];
                 int numRead = comPort.readBytes(readBuffer, readBuffer.length);
-                String s = new String(readBuffer);
-                System.out.println("Read " + s);
+                System.out.println("Read " + numRead + " bytes.");
             }
         } catch (Exception e) { e.printStackTrace(); }
         comPort.closePort();

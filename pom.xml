@@ -53,7 +53,6 @@
     </dependencies>
     <packaging>jar</packaging>
 
-
     <build>
         <!--build with: mvn clean package assembly:single-->
         <plugins>
