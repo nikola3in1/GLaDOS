@@ -15,6 +15,8 @@ import java.nio.charset.Charset;
 
 @Service
 public class FaceAPIServiceImpl implements FaceAPIService {
+    //Glados123!
+
     @Value("${api.faceapi.key}")
     private String apiKey;
     @Value(("${api.faceapi.url}"))

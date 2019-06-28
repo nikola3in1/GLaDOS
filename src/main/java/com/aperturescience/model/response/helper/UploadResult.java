@@ -6,7 +6,7 @@ public class UploadResult {
     private String passed = "";
     private Images[] images;
 
-    UploadResult(){}
+    public UploadResult(){}
 
     public Images[] getImages() {
         return images;

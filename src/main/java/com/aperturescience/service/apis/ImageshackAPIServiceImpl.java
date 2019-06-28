@@ -61,11 +61,10 @@ public class ImageshackAPIServiceImpl implements ImageshackAPIService {
         String imageURL = "error";
         String filename = image.getFilename();
 
-
         System.out.println(image.getFilename());
         //Params
-        MultiValueMap<String, Object> map = new LinkedMultiValueMap<String, Object>();
-        map.add("api_key", apiKey );
+        MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
+        map.add("api_key", apiKey);
         map.add("auth_token", authToken);
         try {
             ByteArrayResource contentsAsResource = new ByteArrayResource(image.getStream().toByteArray()) {
@@ -77,7 +76,6 @@ public class ImageshackAPIServiceImpl implements ImageshackAPIService {
             map.add("file", contentsAsResource);
             Upload response = restTemplate.postForObject(url + "images", map, Upload.class);
             imageURL = response.getResult().getImages()[0].getDirect_link();
-
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -1,140 +1,158 @@
 package com.aperturescience.service.serial;
 
+import com.aperturescience.service.state.DataPersistenceService;
+import com.aperturescience.service.state.SocketCommunicationService;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
-import org.apache.tomcat.util.http.fileupload.IOUtils;
-import org.omg.IOP.Encoding;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 @Service
 public class SerialServiceImpl implements SerialService {
 
     private SerialPort comPort;
+    private final Integer baudRate = 9600;
 
+    private final DataPersistenceService dataService;
+    private final SocketCommunicationService clientService;
+
+    public SerialServiceImpl(DataPersistenceService dataService, SocketCommunicationService clientService) {
+        this.dataService = dataService;
+        this.clientService = clientService;
+    }
+
+    // Read and write from serial
     @Override
-    public String sendMsg(String key, Integer value) {
-        SerialPort comPort = SerialPort.getCommPorts()[0];
-        System.out.println("SEND: " +Arrays.toString(SerialPort.getCommPorts()));
-
-        comPort.openPort();
+    public void sendMsg(String msg) {
+        System.out.println("Sending msg");
         comPort.setBaudRate(9600);
-
-        String request = key + ":" + value;
-        request = request.trim();
         //Send
-        comPort.writeBytes(request.getBytes(), request.getBytes().length);
-        //Read
-//        String response = blockingClient();
-        comPort.closePort();
-        System.out.println("SENT "+request);
-
-//        final String[] response = {""};
-//        comPort.addDataListener(new SerialPortDataListener() {
-//            @Override
-//            public int getListeningEvents() {
-//                return SerialPort.LISTENING_EVENT_DATA_AVAILABLE;
-//            }
-//
-//            @Override
-//            public void serialEvent(SerialPortEvent event) {
-//                if (event.getEventType() != SerialPort.LISTENING_EVENT_DATA_AVAILABLE)
-//                    return;
-//                byte[] newData = new byte[comPort.bytesAvailable()];
-//                if (newData.length > 1) {
-//                    response[0] = new String(newData);
-//                    notifiyClient(new String(newData));
-//                }
-////                int numRead = comPort.readBytes(newData, newData.length);
-//            }
-//        });
-//        comPort.closePort();
-        //Writing key
-//        return response[0];
-        return "";
+        comPort.writeBytes(msg.getBytes(), msg.getBytes().length);
+        System.out.println("Msg's sent");
     }
 
     @Override
     public void readMsg() {
-        SerialPort comPort = SerialPort.getCommPorts()[0];
-        System.out.println("RECIEVE: "+Arrays.toString(SerialPort.getCommPorts()));
-        comPort.setBaudRate(9600);
-        comPort.openPort();
-        System.out.println("BAUD: "+comPort.getBaudRate());
+        System.out.println("Reading msg");
+        System.out.println("PORTS: " + Arrays.toString(SerialPort.getCommPorts()));
+
+        // Validation
+        if (comPort == null) {
+            System.out.println("NO AVAILABLE SERIAL PORTS");
+            return;
+        }
+
+        if (!comPort.isOpen()) {
+            comPort.openPort();
+        }
+        try {
+            while (true) {
+                while (comPort.bytesAvailable() <= 0)
+                    Thread.sleep(20);
+
+                byte[] readBuffer = new byte[comPort.bytesAvailable()];
+                int numRead = comPort.readBytes(readBuffer, readBuffer.length);
+                String msg = new String(readBuffer);
+
+                String[] msgs = msg.split(";");
+                for (String m : msgs) {
+                    if (!m.isEmpty() && m.length() > 5) {
+                        processMessage(m);
+                    }
+                }
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private void processMessage(String msg) {
+        // HUMIDITY:10
+        if (msg.contains(":")) {
+            boolean updateClients = false;
+
+//            System.out.println("MSG: " + msg);
+            String valueStr = msg.split(":")[1].trim();
+            int msgVal = Integer.parseInt(valueStr);
+            Integer intVal = Math.round(msgVal);
+
+            if (msg.contains(Constants.HUMIDITY)) {
+                dataService.insertHumidity(intVal);
+                updateClients = true;
+            } else if (msg.contains(Constants.TEMPERATURE)) {
+                dataService.insertTemperature(intVal);
+                updateClients = true;
+            } else if (msg.contains(Constants.LIGHT)) {
+                dataService.insertBrightness(intVal);
+                updateClients = true;
+            }
+
+            if (updateClients) {
+                // Updating clients with current data
+                clientService.sendCurrentData();
+            }
+
+        } else if (msg.contains("Error")) {
+            try {
+                throw new Exception("ERROR ON DHT SENSOR");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void nonBlockingReading() {
+        System.out.println("NON BLOCKING");
         comPort.addDataListener(new SerialPortDataListener() {
             @Override
-            public int getListeningEvents() { return SerialPort.LISTENING_EVENT_DATA_RECEIVED; }
+            public int getListeningEvents() {
+                return SerialPort.LISTENING_EVENT_DATA_RECEIVED;
+            }
+
             @Override
-            public void serialEvent(SerialPortEvent event)
-            {
+            public void serialEvent(SerialPortEvent event) {
                 byte[] newData = event.getReceivedData();
                 System.out.println("Received data of size: " + newData.length);
                 for (int i = 0; i < newData.length; ++i)
-                    System.out.print((char)newData[i]+" < ");
+                    System.out.print((char) newData[i]);
                 System.out.println("\n");
             }
         });
     }
 
-    @Override
-    public String blockingClient() {
-
-        SerialPort comPort = SerialPort.getCommPorts()[0];
-        comPort.setBaudRate(9600);
-        comPort.openPort();
-        comPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 0, 0);
-        try {
-            while (true) {
-                byte[] readBuffer = new byte[1024];
-                int numRead = comPort.readBytes(readBuffer, readBuffer.length);
-                System.out.println("Read " + numRead + " bytes.");
-            }
-        } catch (Exception e) { e.printStackTrace(); }
-        comPort.closePort();
-
-        return "";
-
-
-//        SerialPort comPort = SerialPort.getCommPorts()[0];
-//        System.out.println("Port: " + comPort.getSystemPortName());
-//        comPort.setBaudRate(9600);
-//        comPort.openPort();
-//        comPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 100, 0);
-//        try {
-//            while (true) {
-//                byte[] readBuffer = new byte[comPort.bytesAvailable()];
-//                if (readBuffer.length > 1) {
-//                    comPort.closePort();
-//                    return new String(readBuffer);
-//                }
-//                Thread.sleep(20);
-////                int numRead = comPort.readBytes(readBuffer, readBuffer.length);
-////                System.out.println("Read " + numRead + " bytes.");
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        comPort.closePort();
-
-//        return "<<<<<";
+    // SerialPort methods
+    public void initSerialPort() {
+        System.out.println("Initializing serial port");
+        System.out.println("NR OF PORTS: " + SerialPort.getCommPorts().length);
+        if (SerialPort.getCommPorts().length > 0) {
+            this.comPort = SerialPort.getCommPorts()[0];
+            System.out.println("PORT: "+this.comPort);
+            comPort.setBaudRate(baudRate);
+            comPort.openPort();
+        }
     }
 
+    private void closePort() {
+        comPort.closePort();
+    }
 
-    private void notifiyClient(String msg) {
+    // Notifications
+    private void notifiyClients(String msg) {
         System.out.println("Response: " + msg);
     }
 
-
     public static class Constants {
-        private static final String motor1 = "MOTOR1";
-        private static final String motor2 = "MOTOR2";
-        private static final String motor3 = "MOTOR3";
-        private static final String motor4 = "MOTOR4";
+        private static final String MOTOR1 = "MOTOR1";
+        private static final String MOTOR2 = "MOTOR2";
+        private static final String MOTOR3 = "MOTOR3";
+        private static final String MOTOR4 = "MOTOR4";
+        private static final String HUMIDITY = "HUMIDITY";
+        private static final String TEMPERATURE = "TEMPERATURE";
+        private static final String LIGHT = "LIGHT";
     }
 }
