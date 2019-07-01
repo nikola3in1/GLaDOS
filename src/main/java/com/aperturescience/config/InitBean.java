@@ -19,7 +19,7 @@ public class InitBean {
         System.out.println("Serial reading service is running");
         serialService.initSerialPort();
         new Thread(serialService::readMsg).start();
-//        serialService.sendMsg(SerialServiceImpl.Messages.setIdle);
+        serialService.sendMsg(SerialServiceImpl.Messages.setIdle);
     }
 
 }
