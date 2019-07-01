@@ -7,6 +7,7 @@ import com.aperturescience.service.apis.FaceAPIService;
 import com.aperturescience.service.apis.ImageshackAPIService;
 import com.aperturescience.service.apis.ObjectDetectionAPIService;
 import com.aperturescience.service.serial.SerialService;
+import com.aperturescience.service.serial.SerialServiceImpl;
 import com.fazecast.jSerialComm.SerialPort;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,6 +45,36 @@ public class CameraController {
         this.faceAPIService = faceAPIService;
     }
 
+    @GetMapping("/test")
+    public void test(){
+        serialService.sendMsg("motor4:10");
+
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        imgApiService.login();
+        Image img = camService.capture();
+        imgApiService.upload(img);
+
+
+        serialService.sendMsg("motor3:4");
+
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        imgApiService.login();
+        img = camService.capture();
+        imgApiService.upload(img);
+
+    }
+
+
     @GetMapping("/login")
     public String login() {
         imgApiService.login();
@@ -58,10 +89,15 @@ public class CameraController {
         System.out.println("picture url:" + picUrl);
         FaceData data = faceAPIService.analyze(picUrl);
         drawRect(picUrl, data);
+
         return picUrl;
     }
 
     private void drawRect(String imageUrl, FaceData faceData) {
+        if (faceData == null && faceData.getFaceRectangle() == null) {
+            return;
+        }
+
         BufferedImage img = null;
         try {
             img = ImageIO.read(new URL(imageUrl));
@@ -75,23 +111,23 @@ public class CameraController {
         g2d.dispose();
 
         try {
-            ImageIO.write(img,"jpg",new File("/home/nikola3in1/Desktop/test.jpg"));
+            ImageIO.write(img,"jpg",new File("./test.jpg"));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private String test() {
-        imgApiService.login();
-        Long startTime = System.currentTimeMillis();
-        String response = "";
-
-        for (int i = 0; i < 50; i++) {
-            response += imgApiService.upload(camService.capture()) + "\n";
-        }
-
-        Long takenTime = System.currentTimeMillis() - startTime;
-        response += "\nTime taken: " + takenTime;
-        return "\nResponse: " + response;
-    }
+//    private String test() {
+//        imgApiService.login();
+//        Long startTime = System.currentTimeMillis();
+//        String response = "";
+//
+//        for (int i = 0; i < 50; i++) {
+//            response += imgApiService.upload(camService.capture()) + "\n";
+//        }
+//
+//        Long takenTime = System.currentTimeMillis() - startTime;
+//        response += "\nTime taken: " + takenTime;
+//        return "\nResponse: " + response;
+//    }
 }

@@ -6,6 +6,15 @@ public class MotorStates {
     private Integer elbow;
     private Integer head;
 
+    public MotorStates(){}
+
+    public MotorStates(Integer head, Integer neck, Integer elbow, Integer base) {
+        this.base = base;
+        this.neck = neck;
+        this.elbow = elbow;
+        this.head = head;
+    }
+
     public Integer getBase() {
         return base;
     }
@@ -42,8 +51,8 @@ public class MotorStates {
     public String toString() {
         return "MotorStates{" +
                 "base=" + base +
-                ", neck=" + neck +
                 ", elbow=" + elbow +
+                ", neck=" + neck +
                 ", head=" + head +
                 '}';
     }

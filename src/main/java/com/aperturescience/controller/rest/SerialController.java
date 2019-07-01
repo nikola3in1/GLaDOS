@@ -27,30 +27,31 @@ public class SerialController {
 //        new Thread(serialService::readMsg).start();
 //        System.out.println("Message's read");
 //    }
-
-    @GetMapping("/serial/write/{msg}")
-    public void serialWrite(@PathVariable String msg) {
-        /*
-         * motor1:10
-         * ;
-         * motor1:10
-         * ;
-         * motor1:10
-         * ;
-         * motor1:10;
-         *
-         * */
-        Long startTime = System.currentTimeMillis();
-        msg = "motor1:1;motor2:1;motor3:1;motor4:1;";
+    @GetMapping("/read/pos")
+    public void getPositions() {
+        String msg = "POS";
         serialService.sendMsg(msg);
-//        serialService.nonBlockingReading();
-
-        Long endTime = System.currentTimeMillis() - startTime;
-        System.out.println("Elapsed: " + endTime);
+        System.out.println("send pos message");
     }
 
-    @GetMapping("/serial/write/{motor}/{value}")
-    public void serialWrite(@PathVariable String motor, @PathVariable Integer value) {
+    @GetMapping("/test/min")
+    public void testMin(){
+        //motor3:44;motor4:68;motor3:-44;motor4:-68;
+        System.out.println("Testing min ranges");
+        String msg = "motor3:-18;motor4:-39";
+        serialService.sendMsg(msg);
+    }
+
+    @GetMapping("/test/range")
+    public void testRange(){
+        //motor3:44;motor4:68;motor3:-44;motor4:-68;
+        System.out.println("Testing range");
+        String msg = "motor3:44;motor4:68;motor3:-44;motor4:-68";
+        serialService.sendMsg(msg);
+    }
+
+    @GetMapping("/write/{head}/{neck}")
+    public void serialWrite(@PathVariable String head, @PathVariable String neck) {
         /*
          * motor1:10
          * ;
@@ -61,13 +62,9 @@ public class SerialController {
          * motor1:10;
          *
          * */
-
         Long startTime = System.currentTimeMillis();
-        String msg = motor + ":" + value;
-        new Thread(serialService::nonBlockingReading);
+        String msg = "motor4:"+head+";motor3:"+neck;
         serialService.sendMsg(msg);
-//        String msg = serialService.readMsg();
-//        serialService.nonBlockingReading();
         Long endTime = System.currentTimeMillis() - startTime;
         System.out.println("Elapsed: " + endTime);
     }

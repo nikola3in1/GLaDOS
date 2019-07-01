@@ -1,6 +1,7 @@
 package com.aperturescience.service.state;
 
 
+import com.aperturescience.model.MotorStates;
 import com.aperturescience.model.SensorData;
 
 import java.util.List;
@@ -23,10 +24,23 @@ public interface DataPersistenceService {
     List<SensorData> getDataInInterval(int start, int end);
 
     Integer getCurrentTemperature();
+
     Integer getCurrentHumidity();
+
     Integer getCurrentBrigtness();
 
     void setCurrentTemperature(Integer temperature);
+
     void setCurrentHumidity(Integer humidity);
+
     void setCurrentBrigtness(Integer brigtness);
+
+    void setCurrentStates(MotorStates states);
+
+    MotorStates getCurrentStates();
+
+    void setLastPicUrl(String url);
+
+    String getLastPicUrl();
+
 }

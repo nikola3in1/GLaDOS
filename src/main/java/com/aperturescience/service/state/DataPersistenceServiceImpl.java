@@ -1,5 +1,6 @@
 package com.aperturescience.service.state;
 
+import com.aperturescience.model.MotorStates;
 import com.aperturescience.model.SensorData;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,8 @@ public class DataPersistenceServiceImpl implements DataPersistenceService {
     private AtomicInteger currentTemperature = new AtomicInteger();
     private AtomicInteger currentHumidity = new AtomicInteger();
     private AtomicInteger currentBrightness = new AtomicInteger();
+    private MotorStates currentStates = new MotorStates();
+    private String lastPicUrl = "";
 
     public synchronized void insertTemperature(Integer temperature) {
         // Validation
@@ -158,6 +161,26 @@ public class DataPersistenceServiceImpl implements DataPersistenceService {
     @Override
     public void setCurrentBrigtness(Integer brigtness) {
         this.currentBrightness.set(brigtness);
+    }
+
+    @Override
+    public synchronized void setCurrentStates(MotorStates states) {
+        currentStates = new MotorStates(states.getHead(), states.getNeck(), states.getElbow(), states.getBase());
+    }
+
+    @Override
+    public synchronized MotorStates getCurrentStates() {
+        return this.currentStates;
+    }
+
+    @Override
+    public synchronized void setLastPicUrl(String url) {
+        this.lastPicUrl = url;
+    }
+
+    @Override
+    public synchronized String getLastPicUrl() {
+        return lastPicUrl;
     }
 
     private synchronized SensorData getCurrentHourData() {

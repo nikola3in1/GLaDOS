@@ -28,7 +28,6 @@ public class FaceAPIServiceImpl implements FaceAPIService {
     @Override
     public FaceData analyze(String picUrl) {
         String path = "detect";
-
         restTemplate.getMessageConverters()
                 .add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
 
@@ -38,6 +37,9 @@ public class FaceAPIServiceImpl implements FaceAPIService {
         String body = "{\"url\":\""+picUrl+"\"}";
         HttpEntity<String> request = new HttpEntity<>(body, headers);
         ResponseEntity<FaceData[]> response = restTemplate.postForEntity(url + path, request, FaceData[].class);
-        return response.getBody()[0];
+        if (response.getBody() != null && response.getBody().length > 0) {
+            return response.getBody()[0];
+        }
+        return null;
     }
 }
